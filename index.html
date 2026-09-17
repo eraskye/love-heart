@@ -3,24 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Love You</title>
+    <title>3D Red Heart</title>
     <style>
         body {
             margin: 0;
             padding: 0;
-            background-color: #050505;
+            background-color: #000000; /* Толық қара фон */
             font-family: 'Courier New', Courier, monospace;
             color: #fff;
             overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             height: 100vh;
-            touch-action: none;
+            touch-action: none; /* Телефонда экранды жылжытпау үшін */
         }
 
         #terminal-ui {
             position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             text-align: center;
             z-index: 10;
             transition: all 0.8s ease;
@@ -32,18 +32,18 @@
             margin: 10px 0;
             font-weight: bold;
             color: #fff;
-            text-shadow: 0 0 10px #ff0044;
+            text-shadow: 0 0 15px #ff0000; /* Қызыл жарық */
         }
 
         .red-text {
-            color: #ff0044;
+            color: #ff0000;
             font-size: 3.5vw;
             margin: 5px 0;
         }
 
         .btn {
-            background-color: #ff0044;
-            color: white;
+            background-color: #ff0000;
+            color: #fff;
             border: none;
             padding: 15px 30px;
             font-size: 4vw;
@@ -53,22 +53,22 @@
             margin-top: 25px;
             border-radius: 8px;
             text-transform: uppercase;
-            box-shadow: 0 0 20px rgba(255, 0, 68, 0.6);
+            box-shadow: 0 0 25px rgba(255, 0, 0, 0.8);
             -webkit-tap-highlight-color: transparent;
             animation: pulseBtn 1.5s infinite;
         }
 
         @keyframes pulseBtn {
-            0% { transform: scale(1); box-shadow: 0 0 20px rgba(255, 0, 68, 0.6); }
-            50% { transform: scale(1.05); box-shadow: 0 0 30px rgba(255, 0, 68, 0.9); }
-            100% { transform: scale(1); box-shadow: 0 0 20px rgba(255, 0, 68, 0.6); }
+            0% { transform: scale(1); box-shadow: 0 0 25px rgba(255, 0, 0, 0.8); }
+            50% { transform: scale(1.05); box-shadow: 0 0 40px rgba(255, 0, 0, 1); }
+            100% { transform: scale(1); box-shadow: 0 0 25px rgba(255, 0, 0, 0.8); }
         }
 
         .btn:active {
             transform: scale(0.95);
         }
 
-        #heartCanvas {
+        #canvas-container {
             position: absolute;
             top: 0;
             left: 0;
@@ -76,153 +76,203 @@
             height: 100%;
             z-index: 5;
             opacity: 0;
-            transition: opacity 1.5s ease;
+            transition: opacity 2s ease;
         }
     </style>
 </head>
 <body>
 
     <div id="terminal-ui">
-        <p class="red-text">[system] Initializing heart.PROTOCOL_v2.0...</p>
+        <p class="red-text">[system] Initializing 3D heart.PROTOCOL_v3.0...</p>
         <h1>Love you.</h1>
         <p class="red-text">> One encrypted package found for you.</p>
         <button class="btn" onclick="startHeart()">DECRYPT MESSAGE</button>
     </div>
 
-    <!-- Тек Canvas қалды, артық жазу жоқ -->
-    <canvas id="heartCanvas"></canvas>
+    <div id="canvas-container"></div>
 
+    <!-- Three.js кітапханасын қосу -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
     <script>
-        const canvas = document.getElementById('heartCanvas');
-        const ctx = canvas.getContext('2d');
-        const terminalUI = document.getElementById('terminal-ui');
-        
-        let width, height, centerX, centerY;
-        let particles = [];
+        let scene, camera, renderer, heartParticles;
         let isAnimating = false;
-        let time = 0;
-
-        function resizeCanvas() {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-            centerX = width / 2;
-            centerY = height / 2;
-        }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-
-        class Particle {
-            constructor(targetX, targetY) {
-                this.targetX = targetX;
-                this.targetY = targetY;
-                this.x = centerX;
-                this.y = centerY;
-                this.vx = (Math.random() - 0.5) * 20;
-                this.vy = (Math.random() - 0.5) * 20;
-                this.opacity = 0;
-                this.size = Math.max(8, Math.min(width, height) * 0.02);
-                this.delay = Math.random() * 50;
-                this.isFlowing = false;
-            }
-
-            update() {
-                if (this.delay > 0) {
-                    this.delay--;
-                    return;
-                }
-
-                if (this.isFlowing) {
-                    this.y -= 0.5;
-                    this.x += Math.sin(this.y * 0.02) * 1;
-                    this.opacity -= 0.01;
-                    if (this.opacity <= 0) {
-                        this.reset();
-                    }
-                } else {
-                    this.opacity += 0.05;
-                    if (this.opacity > 1) this.opacity = 1;
-                    
-                    let dx = this.targetX - this.x;
-                    let dy = this.targetY - this.y;
-                    this.vx += dx * 0.01;
-                    this.vy += dy * 0.01;
-                    this.vx *= 0.92;
-                    this.vy *= 0.92;
-                    
-                    this.x += this.vx;
-                    this.y += this.vy;
-
-                    if (Math.abs(dx) < 2 && Math.abs(dy) < 2 && Math.random() < 0.005) {
-                        this.isFlowing = true;
-                    }
-                }
-            }
-
-            reset() {
-                this.x = centerX + (Math.random() - 0.5) * 50;
-                this.y = centerY + (Math.random() - 0.5) * 50;
-                this.opacity = 0;
-                this.isFlowing = false;
-                this.delay = Math.random() * 50;
-            }
-
-            draw() {
-                if (this.delay > 0 || this.opacity <= 0) return;
-                
-                ctx.font = `bold ${this.size}px 'Courier New', monospace`;
-                ctx.fillStyle = `rgba(255, 0, 68, ${this.opacity})`;
-                ctx.textAlign = "center";
-                ctx.textBaseline = "middle";
-                ctx.fillText("I love you", this.x, this.y);
-            }
-        }
-
-        function generateHeartPoints() {
-            particles = [];
-            const scale = Math.min(width, height) / 35; 
-            
-            for (let t = 0; t < Math.PI * 2; t += 0.1) {
-                const x = 16 * Math.pow(Math.sin(t), 3);
-                const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
-                
-                for (let r = 0.1; r < 1.1; r += 0.2) {
-                    const px = x * scale * r;
-                    const py = y * scale * r;
-                    particles.push(new Particle(centerX + px, centerY + py));
-                }
-            }
-        }
+        let isDragging = false;
+        
+        // Айналуды басқару айнымалылары
+        let previousPosition = { x: 0, y: 0 };
+        let targetRotation = { x: 0, y: 0 };
+        let velocity = { x: 0, y: 0 };
 
         function startHeart() {
-            terminalUI.style.opacity = '0';
-            terminalUI.style.transform = 'scale(0.8)';
-            setTimeout(() => terminalUI.style.display = 'none', 800);
-
-            canvas.style.opacity = '1';
-            generateHeartPoints();
+            // Терминал терезесін жасыру
+            document.getElementById('terminal-ui').style.opacity = '0';
+            setTimeout(() => document.getElementById('terminal-ui').style.display = 'none', 800);
+            document.getElementById('canvas-container').style.opacity = '1';
             
             if (!isAnimating) {
                 isAnimating = true;
+                initThreeJS();
                 animate();
             }
         }
 
+        function initThreeJS() {
+            // 1. Сахна мен камера
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 40;
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+            // 2. Қызыл жарқыраған дөңгелек бөлшектер жасау (Тек қызыл, ақ жоқ)
+            const canvas = document.createElement('canvas');
+            canvas.width = 64;
+            canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+            gradient.addColorStop(0, 'rgba(255, 0, 0, 1)');   // Ортасы қанық қызыл
+            gradient.addColorStop(0.5, 'rgba(255, 0, 0, 0.5)'); // Ортасы ашық қызыл
+            gradient.addColorStop(1, 'rgba(255, 0, 0, 0)');   // Шеті мөлдір
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 64, 64);
+            const particleTexture = new THREE.CanvasTexture(canvas);
+
+            // 3. 3D Жүрек пішінін құру
+            const particleCount = 8000; // Бөлшектер саны (3D эффект үшін көбірек)
+            const geometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+            const colors = new Float32Array(particleCount * 3);
+
+            // Тек қызылдың реңктері (Қанық қызыл, қою қызыл, ашық қызыл)
+            const colorRed = new THREE.Color(0xff0000); 
+            const colorDarkRed = new THREE.Color(0x990000); 
+            const colorBrightRed = new THREE.Color(0xff3333); 
+
+            for (let i = 0; i < particleCount; i++) {
+                // 2D жүрек формуласы
+                const t = Math.random() * Math.PI * 2;
+                const r = Math.pow(Math.random(), 0.4); // Ішін толтыру
+                
+                const x = 16 * Math.pow(Math.sin(t), 3) * r;
+                const y = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t)) * r;
+                
+                // 3D тереңдік (Z осі). Ортасында қалың, шетінде жіңішке.
+                const z = (Math.random() - 0.5) * 12 * Math.sqrt(1 - r * r);
+                
+                positions[i*3] = x;
+                positions[i*3+1] = y;
+                positions[i*3+2] = z;
+
+                // Түстерді тағайындау (Тек қызыл реңктер)
+                let color = colorRed;
+                if (Math.random() > 0.7) color = colorDarkRed;
+                else if (Math.random() > 0.5) color = colorBrightRed;
+
+                colors[i*3] = color.r;
+                colors[i*3+1] = color.g;
+                colors[i*3+2] = color.b;
+            }
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+            // 4. Материал
+            const material = new THREE.PointsMaterial({
+                size: 0.8,
+                map: particleTexture,
+                vertexColors: true,
+                blending: THREE.AdditiveBlending, // Жарық шашу эффектісі
+                depthWrite: false,
+                transparent: true,
+                opacity: 0.9
+            });
+
+            heartParticles = new THREE.Points(geometry, material);
+            scene.add(heartParticles);
+
+            // 5. Тышқанды/саусақты бақылау (Тек сүйрегенде айналу)
+            const container = document.getElementById('canvas-container');
+
+            const onStart = (e) => {
+                isDragging = true;
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                previousPosition = { x: clientX, y: clientY };
+                velocity = { x: 0, y: 0 };
+            };
+
+            const onMove = (e) => {
+                if (!isDragging) return;
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                
+                const deltaX = clientX - previousPosition.x;
+                const deltaY = clientY - previousPosition.y;
+                
+                velocity.x = deltaY * 0.005;
+                velocity.y = deltaX * 0.005;
+
+                targetRotation.x += velocity.x;
+                targetRotation.y += velocity.y;
+                
+                previousPosition = { x: clientX, y: clientY };
+            };
+
+            const onEnd = () => { isDragging = false; };
+
+            // Mouse оқиғалары
+            container.addEventListener('mousedown', onStart);
+            container.addEventListener('mousemove', onMove);
+            container.addEventListener('mouseup', onEnd);
+            container.addEventListener('mouseleave', onEnd);
+
+            // Телефон (Touch) оқиғалары
+            container.addEventListener('touchstart', onStart, { passive: true });
+            container.addEventListener('touchmove', onMove, { passive: true });
+            container.addEventListener('touchend', onEnd);
+        }
+
+        // 6. Анимация циклі
+        let time = 0;
         function animate() {
             requestAnimationFrame(animate);
-            ctx.clearRect(0, 0, width, height);
-            
             time += 0.05;
-            const pulse = 1 + Math.sin(time) * 0.02;
 
-            particles.forEach(p => {
-                if (!p.isFlowing) {
-                    p.targetX = centerX + (p.targetX - centerX) * pulse;
-                    p.targetY = centerY + (p.targetY - centerY) * pulse;
+            if (heartParticles) {
+                // Инерциямен айналу (қолды тартқанда жалғастырып айналады, сосын тоқтайды)
+                if (!isDragging) {
+                    targetRotation.x += velocity.x;
+                    targetRotation.y += velocity.y;
+                    velocity.x *= 0.95; // Үйкеліс күші
+                    velocity.y *= 0.95;
                 }
-                p.update();
-                p.draw();
-            });
+
+                heartParticles.rotation.x += (targetRotation.x - heartParticles.rotation.x) * 0.1;
+                heartParticles.rotation.y += (targetRotation.y - heartParticles.rotation.y) * 0.1;
+
+                // Жүректің соғу эффектісі (Pulse)
+                const pulse = 1 + Math.sin(time) * 0.03;
+                heartParticles.scale.set(pulse, pulse, pulse);
+
+                // Ауада баяу қалқып тұруы
+                heartParticles.position.y = Math.sin(time * 0.5) * 1.5;
+            }
+
+            renderer.render(scene, camera);
         }
+
+        // Экран өлшемі өзгергенде бейімдеу
+        window.addEventListener('resize', () => {
+            if (camera && renderer) {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+        });
     </script>
 </body>
 </html>
