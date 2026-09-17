@@ -2,162 +2,254 @@
 <html lang="kk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ERASKYE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Do you love me?</title>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
     <style>
-        body {
+        * {
             margin: 0;
             padding: 0;
-            background-color: #050505;
+            box-sizing: border-box;
+            font-family: 'VT323', monospace;
+            user-select: none;
+        }
+
+        body {
+            background-color: #0d0d0d;
+            color: white;
             overflow: hidden;
             height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            touch-action: none;
-            font-family: 'Courier New', Courier, monospace;
         }
 
-        #start-screen {
+        /* --- 1-ші экран: Сұрақ терезесі --- */
+        #dialog-box {
+            background-color: #111;
+            border: 4px double #fff;
+            padding: 10px;
+            width: 400px;
+            max-width: 90%;
             position: absolute;
-            z-index: 10;
-            transition: opacity 1s ease;
+            z-index: 100;
+            box-shadow: 10px 10px 0px rgba(255, 255, 255, 0.2);
         }
 
-        .btn {
-            background-color: transparent;
-            color: #ff0044;
-            border: 2px solid #ff0044;
-            padding: 18px 50px;
-            font-size: 20px;
-            font-family: 'Courier New', monospace;
-            font-weight: bold;
-            letter-spacing: 4px;
+        .dialog-header {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #fff;
+            padding-bottom: 5px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border: 2px solid #fff;
+        }
+
+        .dialog-content {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .dialog-content p {
+            font-size: 32px;
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            position: relative;
+            height: 50px;
+        }
+
+        button {
+            background: transparent;
+            color: white;
+            border: 3px solid white;
+            padding: 5px 25px;
+            font-size: 24px;
             cursor: pointer;
-            border-radius: 40px;
-            text-transform: uppercase;
-            box-shadow: 0 0 25px rgba(255, 0, 68, 0.6);
-            -webkit-tap-highlight-color: transparent;
-            animation: pulseBtn 2s infinite;
+            transition: all 0.2s;
+            font-family: 'VT323', monospace;
         }
 
-        @keyframes pulseBtn {
-            0% { transform: scale(1); box-shadow: 0 0 25px rgba(255, 0, 68, 0.6); }
-            50% { transform: scale(1.05); box-shadow: 0 0 40px rgba(255, 0, 68, 1); }
-            100% { transform: scale(1); box-shadow: 0 0 25px rgba(255, 0, 68, 0.6); }
+        button:hover {
+            background: white;
+            color: black;
         }
 
-        .btn:active {
-            transform: scale(0.95);
+        #no-btn {
+            position: absolute;
+            left: 60%;
         }
 
-        #heartCanvas {
+        /* --- 2-ші экран: Махаббат жаңбыры --- */
+        #love-screen {
+            display: none;
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            opacity: 0;
-            transition: opacity 1.5s ease;
+            background-color: #0d0d0d;
+            overflow: hidden;
+        }
+
+        .falling-text {
+            position: absolute;
+            top: -100px;
+            color: #ff00aa;
+            font-size: 28px;
+            white-space: nowrap;
+            animation: fall linear infinite;
+            opacity: 0.8;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-100px); }
+            100% { transform: translateY(110vh); }
+        }
+
+        .center-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
+            animation: pulse 2s infinite;
+        }
+
+        .center-content h1 {
+            font-size: 80px;
+            color: white;
+            text-shadow: 0 0 20px #ff00aa, 0 0 40px #ff00aa;
+            margin-bottom: 20px;
+            letter-spacing: 5px;
+        }
+
+        .heart {
+            width: 100px;
+            height: 100px;
+            background: white;
+            position: relative;
+            transform: rotate(-45deg);
+            margin: 0 auto;
+            box-shadow: 0 0 30px #ff00aa, 0 0 60px #ff00aa;
+            animation: heartbeat 1s infinite alternate;
+        }
+
+        .heart::before, .heart::after {
+            content: "";
+            width: 100px;
+            height: 100px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            box-shadow: 0 0 30px #ff00aa;
+        }
+
+        .heart::before {
+            top: -50px;
+            left: 0;
+        }
+
+        .heart::after {
+            top: 0;
+            left: 50px;
+        }
+
+        @keyframes heartbeat {
+            0% { transform: rotate(-45deg) scale(1); }
+            100% { transform: rotate(-45deg) scale(1.1); }
+        }
+
+        @keyframes pulse {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.02); }
+            100% { transform: translate(-50%, -50%) scale(1); }
         }
     </style>
 </head>
 <body>
 
-    <div id="start-screen">
-        <button class="btn" onclick="startHeart()">ERASKYE</button>
+    <!-- Бірінші экран -->
+    <div id="dialog-box">
+        <div class="dialog-header">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+        <div class="dialog-content">
+            <p>Do you love me?</p>
+            <div class="buttons">
+                <button id="yes-btn" onclick="showLove()">Yes</button>
+                <button id="no-btn" onmouseover="moveNo()">No</button>
+            </div>
+        </div>
     </div>
 
-    <canvas id="heartCanvas"></canvas>
+    <!-- Екінші экран -->
+    <div id="love-screen">
+        <div id="matrix"></div>
+        <div class="center-content">
+            <h1>LOVE YOU</h1>
+            <div class="heart"></div>
+        </div>
+    </div>
 
     <script>
-        const canvas = document.getElementById('heartCanvas');
-        const ctx = canvas.getContext('2d');
-        const startScreen = document.getElementById('start-screen');
-        
-        let width, height, centerX, centerY;
-        let points = [];
-        let frame = 0;
-        let isStarted = false;
-
-        // Экран өлшемін реттеу
-        function resizeCanvas() {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-            centerX = width / 2;
-            centerY = height / 2;
-            if (isStarted) generateHeart();
-        }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-
-        // Жүрек нүктелерін жасау (Анық, ботқа болмайтындай)
-        function generateHeart() {
-            points = [];
-            // Экранға дәл сыйымды болуы үшін масштаб
-            const scale = Math.min(width, height) / 48; 
+        // "No" батырмасын тышқаннан қашыру
+        function moveNo() {
+            const noBtn = document.getElementById('no-btn');
+            const randomX = Math.floor(Math.random() * 80) - 40; // -40px-тен +40px-ке дейін
+            const randomY = Math.floor(Math.random() * 80) - 40; // -40px-тен +40px-ке дейін
             
-            // Жүрек формуласы
-            for (let t = 0; t < Math.PI * 2; t += 0.18) {
-                const x = 16 * Math.pow(Math.sin(t), 3);
-                const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+            noBtn.style.transform = `translate(${randomX}px, ${randomY}px)`;
+            
+            // Кейде мәтінін де өзгертіп қоюға болады
+            const texts = ["No", "Are you sure?", "Really?", "Think again!", "Please?"];
+            noBtn.innerText = texts[Math.floor(Math.random() * texts.length)];
+        }
+
+        // "Yes" басқандағы әрекет
+        function showLove() {
+            // Бірінші экранды жасыру
+            document.getElementById('dialog-box').style.display = 'none';
+            
+            // Екінші экранды көрсету
+            document.getElementById('love-screen').style.display = 'block';
+            
+            // Махаббат жаңбырын бастау
+            startMatrix();
+        }
+
+        // Төмен қарай түсетін "LOVE YOU" мәтіндерін жасау
+        function startMatrix() {
+            const matrixContainer = document.getElementById('matrix');
+            const text = "LOVE YOU ";
+            
+            // 60 баған жасаймыз
+            for (let i = 0; i < 60; i++) {
+                const span = document.createElement('span');
+                span.className = 'falling-text';
+                span.innerText = text;
                 
-                // Жүректің ішін толтыру (арақашықтықты дұрыстадым)
-                for (let r = 0.15; r < 1.0; r += 0.3) {
-                    points.push({
-                        x: centerX + x * scale * r,
-                        y: centerY + y * scale * r,
-                        opacity: 0,
-                        delay: Math.random() * 80 // Жайлап пайда болуы үшін
-                    });
-                }
+                // Кездейсоқ позициялар
+                span.style.left = Math.random() * 100 + '%';
+                span.style.animationDuration = (Math.random() * 3 + 2) + 's'; // 2-5 секунд
+                span.style.animationDelay = Math.random() * 5 + 's'; // 0-5 секунд кідіріс
+                span.style.fontSize = (Math.random() * 20 + 20) + 'px'; // 20-40px өлшем
+                
+                matrixContainer.appendChild(span);
             }
-        }
-
-        function startHeart() {
-            isStarted = true;
-            
-            // Кнопканы жасыру
-            startScreen.style.opacity = '0';
-            setTimeout(() => startScreen.style.display = 'none', 1000);
-            
-            // Canvas-ты көрсету
-            canvas.style.opacity = '1';
-            
-            // Жүрек нүктелерін жасау
-            generateHeart();
-            
-            // Анимацияны бастау
-            animate();
-        }
-
-        // Анимация циклі (Тек пайда болу, артық қозғалыс жоқ)
-        function animate() {
-            requestAnimationFrame(animate);
-            ctx.clearRect(0, 0, width, height);
-            frame++;
-            
-            // Қаріп өлшемін кішірейттім (ботқа болмауы үшін)
-            const fontSize = Math.max(7, Math.min(width, height) * 0.013);
-            ctx.font = `bold ${fontSize}px 'Courier New', monospace`;
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.shadowColor = "#ff0044";
-            ctx.shadowBlur = 8; // Жарқырау эффектісі
-
-            points.forEach(p => {
-                // Тек уақыты келгенде ғана пайда болады (жайлап)
-                if (frame > p.delay) {
-                    p.opacity += 0.02; 
-                    if (p.opacity > 1) p.opacity = 1;
-                }
-
-                if (p.opacity > 0) {
-                    // Ешқандай pulse жоқ, тек өз орнында тұрады
-                    ctx.fillStyle = `rgba(255, 0, 68, ${p.opacity})`;
-                    ctx.fillText("I love you", p.x, p.y);
-                }
-            });
         }
     </script>
 </body>
