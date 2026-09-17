@@ -8,7 +8,7 @@
         body {
             margin: 0;
             padding: 0;
-            background-color: #0a0a0a;
+            background-color: #050505;
             font-family: 'Courier New', Courier, monospace;
             color: #fff;
             overflow: hidden;
@@ -23,7 +23,7 @@
             position: absolute;
             text-align: center;
             z-index: 10;
-            transition: opacity 1s ease;
+            transition: all 0.8s ease;
             width: 90%;
         }
 
@@ -31,14 +31,14 @@
             font-size: 12vw;
             margin: 10px 0;
             font-weight: bold;
-            letter-spacing: 1px;
+            color: #fff;
+            text-shadow: 0 0 10px #ff0044;
         }
 
         .red-text {
             color: #ff0044;
             font-size: 3.5vw;
             margin: 5px 0;
-            word-wrap: break-word;
         }
 
         .btn {
@@ -50,15 +50,21 @@
             font-family: inherit;
             font-weight: bold;
             cursor: pointer;
-            margin-top: 20px;
+            margin-top: 25px;
             border-radius: 8px;
             text-transform: uppercase;
-            box-shadow: 0 0 15px rgba(255, 0, 68, 0.5);
+            box-shadow: 0 0 20px rgba(255, 0, 68, 0.6);
             -webkit-tap-highlight-color: transparent;
+            animation: pulseBtn 1.5s infinite;
+        }
+
+        @keyframes pulseBtn {
+            0% { transform: scale(1); box-shadow: 0 0 20px rgba(255, 0, 68, 0.6); }
+            50% { transform: scale(1.05); box-shadow: 0 0 30px rgba(255, 0, 68, 0.9); }
+            100% { transform: scale(1); box-shadow: 0 0 20px rgba(255, 0, 68, 0.6); }
         }
 
         .btn:active {
-            background-color: #cc0033;
             transform: scale(0.95);
         }
 
@@ -70,21 +76,7 @@
             height: 100%;
             z-index: 5;
             opacity: 0;
-            transition: opacity 2s ease;
-        }
-
-        .heart-text {
-            position: absolute;
-            z-index: 6;
-            font-size: 10vw;
-            font-weight: bold;
-            text-shadow: 0 0 15px #ff0044;
-            opacity: 0;
             transition: opacity 1.5s ease;
-            pointer-events: none;
-            text-align: center;
-            width: 100%;
-            left: 0;
         }
     </style>
 </head>
@@ -97,91 +89,139 @@
         <button class="btn" onclick="startHeart()">DECRYPT MESSAGE</button>
     </div>
 
+    <!-- Тек Canvas қалды, артық жазу жоқ -->
     <canvas id="heartCanvas"></canvas>
-    <div id="heartTextOverlay" class="heart-text">Love you.</div>
 
     <script>
         const canvas = document.getElementById('heartCanvas');
         const ctx = canvas.getContext('2d');
         const terminalUI = document.getElementById('terminal-ui');
-        const heartTextOverlay = document.getElementById('heartTextOverlay');
         
-        let width, height;
+        let width, height, centerX, centerY;
         let particles = [];
+        let isAnimating = false;
+        let time = 0;
 
         function resizeCanvas() {
             width = canvas.width = window.innerWidth;
             height = canvas.height = window.innerHeight;
-            if (particles.length > 0) {
-                generateHeartPoints();
-            }
+            centerX = width / 2;
+            centerY = height / 2;
         }
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
+
+        class Particle {
+            constructor(targetX, targetY) {
+                this.targetX = targetX;
+                this.targetY = targetY;
+                this.x = centerX;
+                this.y = centerY;
+                this.vx = (Math.random() - 0.5) * 20;
+                this.vy = (Math.random() - 0.5) * 20;
+                this.opacity = 0;
+                this.size = Math.max(8, Math.min(width, height) * 0.02);
+                this.delay = Math.random() * 50;
+                this.isFlowing = false;
+            }
+
+            update() {
+                if (this.delay > 0) {
+                    this.delay--;
+                    return;
+                }
+
+                if (this.isFlowing) {
+                    this.y -= 0.5;
+                    this.x += Math.sin(this.y * 0.02) * 1;
+                    this.opacity -= 0.01;
+                    if (this.opacity <= 0) {
+                        this.reset();
+                    }
+                } else {
+                    this.opacity += 0.05;
+                    if (this.opacity > 1) this.opacity = 1;
+                    
+                    let dx = this.targetX - this.x;
+                    let dy = this.targetY - this.y;
+                    this.vx += dx * 0.01;
+                    this.vy += dy * 0.01;
+                    this.vx *= 0.92;
+                    this.vy *= 0.92;
+                    
+                    this.x += this.vx;
+                    this.y += this.vy;
+
+                    if (Math.abs(dx) < 2 && Math.abs(dy) < 2 && Math.random() < 0.005) {
+                        this.isFlowing = true;
+                    }
+                }
+            }
+
+            reset() {
+                this.x = centerX + (Math.random() - 0.5) * 50;
+                this.y = centerY + (Math.random() - 0.5) * 50;
+                this.opacity = 0;
+                this.isFlowing = false;
+                this.delay = Math.random() * 50;
+            }
+
+            draw() {
+                if (this.delay > 0 || this.opacity <= 0) return;
+                
+                ctx.font = `bold ${this.size}px 'Courier New', monospace`;
+                ctx.fillStyle = `rgba(255, 0, 68, ${this.opacity})`;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText("I love you", this.x, this.y);
+            }
+        }
 
         function generateHeartPoints() {
             particles = [];
             const scale = Math.min(width, height) / 35; 
             
-            for (let t = 0; t < Math.PI * 2; t += 0.08) {
+            for (let t = 0; t < Math.PI * 2; t += 0.1) {
                 const x = 16 * Math.pow(Math.sin(t), 3);
                 const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
                 
-                for (let r = 0.1; r < 1; r += 0.25) {
+                for (let r = 0.1; r < 1.1; r += 0.2) {
                     const px = x * scale * r;
                     const py = y * scale * r;
-                    
-                    particles.push({
-                        x: width / 2 + px,
-                        y: height / 2 + py,
-                        text: "I love you",
-                        opacity: 0,
-                        delay: Math.random() * 2
-                    });
+                    particles.push(new Particle(centerX + px, centerY + py));
                 }
             }
         }
 
         function startHeart() {
             terminalUI.style.opacity = '0';
-            setTimeout(() => terminalUI.style.display = 'none', 1000);
+            terminalUI.style.transform = 'scale(0.8)';
+            setTimeout(() => terminalUI.style.display = 'none', 800);
 
             canvas.style.opacity = '1';
             generateHeartPoints();
             
-            setTimeout(() => {
-                heartTextOverlay.style.opacity = '1';
-                heartTextOverlay.style.top = '50%';
-                heartTextOverlay.style.transform = 'translateY(-50%)';
-            }, 1500);
-
-            animate();
+            if (!isAnimating) {
+                isAnimating = true;
+                animate();
+            }
         }
 
-        let frame = 0;
-
         function animate() {
-            frame++;
+            requestAnimationFrame(animate);
             ctx.clearRect(0, 0, width, height);
             
-            const fontSize = Math.max(10, Math.min(width, height) * 0.025);
-            
+            time += 0.05;
+            const pulse = 1 + Math.sin(time) * 0.02;
+
             particles.forEach(p => {
-                if (frame > p.delay * 60) {
-                    p.opacity += 0.05;
-                    if (p.opacity > 1) p.opacity = 1;
+                if (!p.isFlowing) {
+                    p.targetX = centerX + (p.targetX - centerX) * pulse;
+                    p.targetY = centerY + (p.targetY - centerY) * pulse;
                 }
-
-                if (p.opacity > 0) {
-                    ctx.font = `${fontSize}px 'Courier New', monospace`;
-                    ctx.fillStyle = `rgba(255, 0, 68, ${p.opacity})`; 
-                    ctx.textAlign = "center";
-                    ctx.textBaseline = "middle";
-                    ctx.fillText(p.text, p.x, p.y);
-                }
+                p.update();
+                p.draw();
             });
-
-            requestAnimationFrame(animate);
         }
     </script>
 </body>
