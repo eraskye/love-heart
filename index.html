@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Love You</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0a0a0a;
+            font-family: 'Courier New', Courier, monospace;
+            color: #fff;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            touch-action: none;
+        }
+
+        #terminal-ui {
+            position: absolute;
+            text-align: center;
+            z-index: 10;
+            transition: opacity 1s ease;
+            width: 90%;
+        }
+
+        #terminal-ui h1 {
+            font-size: 12vw;
+            margin: 10px 0;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .red-text {
+            color: #ff0044;
+            font-size: 3.5vw;
+            margin: 5px 0;
+            word-wrap: break-word;
+        }
+
+        .btn {
+            background-color: #ff0044;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 4vw;
+            font-family: inherit;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            border-radius: 8px;
+            text-transform: uppercase;
+            box-shadow: 0 0 15px rgba(255, 0, 68, 0.5);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn:active {
+            background-color: #cc0033;
+            transform: scale(0.95);
+        }
+
+        #heartCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+            opacity: 0;
+            transition: opacity 2s ease;
+        }
+
+        .heart-text {
+            position: absolute;
+            z-index: 6;
+            font-size: 10vw;
+            font-weight: bold;
+            text-shadow: 0 0 15px #ff0044;
+            opacity: 0;
+            transition: opacity 1.5s ease;
+            pointer-events: none;
+            text-align: center;
+            width: 100%;
+            left: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="terminal-ui">
+        <p class="red-text">[system] Initializing heart.PROTOCOL_v2.0...</p>
+        <h1>Love you.</h1>
+        <p class="red-text">> One encrypted package found for you.</p>
+        <button class="btn" onclick="startHeart()">DECRYPT MESSAGE</button>
+    </div>
+
+    <canvas id="heartCanvas"></canvas>
+    <div id="heartTextOverlay" class="heart-text">Love you.</div>
+
+    <script>
+        const canvas = document.getElementById('heartCanvas');
+        const ctx = canvas.getContext('2d');
+        const terminalUI = document.getElementById('terminal-ui');
+        const heartTextOverlay = document.getElementById('heartTextOverlay');
+        
+        let width, height;
+        let particles = [];
+
+        function resizeCanvas() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            if (particles.length > 0) {
+                generateHeartPoints();
+            }
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function generateHeartPoints() {
+            particles = [];
+            const scale = Math.min(width, height) / 35; 
+            
+            for (let t = 0; t < Math.PI * 2; t += 0.08) {
+                const x = 16 * Math.pow(Math.sin(t), 3);
+                const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+                
+                for (let r = 0.1; r < 1; r += 0.25) {
+                    const px = x * scale * r;
+                    const py = y * scale * r;
+                    
+                    particles.push({
+                        x: width / 2 + px,
+                        y: height / 2 + py,
+                        text: "I love you",
+                        opacity: 0,
+                        delay: Math.random() * 2
+                    });
+                }
+            }
+        }
+
+        function startHeart() {
+            terminalUI.style.opacity = '0';
+            setTimeout(() => terminalUI.style.display = 'none', 1000);
+
+            canvas.style.opacity = '1';
+            generateHeartPoints();
+            
+            setTimeout(() => {
+                heartTextOverlay.style.opacity = '1';
+                heartTextOverlay.style.top = '50%';
+                heartTextOverlay.style.transform = 'translateY(-50%)';
+            }, 1500);
+
+            animate();
+        }
+
+        let frame = 0;
+
+        function animate() {
+            frame++;
+            ctx.clearRect(0, 0, width, height);
+            
+            const fontSize = Math.max(10, Math.min(width, height) * 0.025);
+            
+            particles.forEach(p => {
+                if (frame > p.delay * 60) {
+                    p.opacity += 0.05;
+                    if (p.opacity > 1) p.opacity = 1;
+                }
+
+                if (p.opacity > 0) {
+                    ctx.font = `${fontSize}px 'Courier New', monospace`;
+                    ctx.fillStyle = `rgba(255, 0, 68, ${p.opacity})`; 
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText(p.text, p.x, p.y);
+                }
+            });
+
+            requestAnimationFrame(animate);
+        }
+    </script>
+</body>
+</html>
